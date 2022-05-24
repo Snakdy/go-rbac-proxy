@@ -21,9 +21,7 @@ var conf = Configuration{
 }
 
 func TestAuthority_HasGlobalRole(t *testing.T) {
-	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{
-		Verbosity: 10,
-	}))
+	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
 
 	auth := NewAuthority(&conf, func(ctx context.Context, subject, role string) (bool, error) {
 		if subject == "john.doe" {

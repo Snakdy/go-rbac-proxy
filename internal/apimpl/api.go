@@ -26,6 +26,10 @@ func (a *Authority) Can(ctx context.Context, request *api.AccessRequest) (*api.A
 	if ok {
 		return &api.AccessResponse{Message: "", Ok: true}, nil
 	}
+	ok, err = a.hasRole(ctx, request)
+	if ok {
+		return &api.AccessResponse{Message: "", Ok: true}, nil
+	}
 	return &api.AccessResponse{Message: "", Ok: false}, nil
 }
 
@@ -43,6 +47,13 @@ func canPerformAction(actions []string, verb api.Verb) bool {
 	// otherwise check that the requested action
 	// is in the list of supported actions
 	return sliceutils.Includes(actions, verb.String())
+}
+
+func (a *Authority) hasRole(ctx context.Context, request *api.AccessRequest) (bool, error) {
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
+	log.V(1).Info("checking roles")
+
+	return a.subjectCanDoAction(ctx, request.GetSubject(), request.GetResource(), request.GetAction())
 }
 
 func (a *Authority) hasGlobalRole(ctx context.Context, request *api.AccessRequest) (bool, error) {

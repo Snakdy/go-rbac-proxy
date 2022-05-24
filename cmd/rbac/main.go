@@ -31,7 +31,7 @@ func main() {
 
 	// configure grpc
 	gsrv := grpc.NewServer()
-	api.RegisterAuthorityServer(gsrv, apimpl.NewAuthority())
+	api.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(nil, nil, nil))
 
 	// configure routing
 	router := mux.NewRouter()
