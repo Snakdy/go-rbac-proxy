@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "gitlab.com/go-prism/go-rbac-proxy/pkg/api";
+
+enum Verb {
+  CREATE = 0;
+  READ = 1;
+  UPDATE = 2;
+  DELETE = 3;
+  SUDO = 4;
+}
+
+service Authority {
+  rpc Can(AccessRequest) returns (AccessResponse);
+}
+
+message AccessRequest {
+  string subject = 1;
+  string resource = 2;
+  Verb action = 3;
+}
+
+message AccessResponse {
+  string message = 1;
+}

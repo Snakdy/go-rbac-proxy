@@ -1,4 +1,4 @@
-module go-rbac-proxy
+module gitlab.com/go-prism/go-rbac-proxy
 
 go 1.18
 
