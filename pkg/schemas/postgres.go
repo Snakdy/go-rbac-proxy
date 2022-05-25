@@ -2,9 +2,13 @@ package schemas
 
 import "gorm.io/gorm"
 
-type RoleBinding struct {
+type PostgresRoleBinding struct {
 	gorm.Model
-	Subject  string `gorm:"index:idx_rbac"`
-	Resource string `gorm:"index:idx_rbac"`
-	Verb     string `gorm:"index:idx_rbac"`
+	Subject  string `gorm:"uniqueIndex:idx_rbac"`
+	Resource string `gorm:"uniqueIndex:idx_rbac"`
+	Verb     string `gorm:"uniqueIndex:idx_rbac"`
+}
+
+func (PostgresRoleBinding) TableName() string {
+	return "role_bindings"
 }

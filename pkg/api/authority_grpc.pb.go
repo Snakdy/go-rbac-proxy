@@ -22,7 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthorityClient interface {
-	Can(ctx context.Context, in *AccessRequest, opts ...grpc.CallOption) (*AccessResponse, error)
+	Can(ctx context.Context, in *AccessRequest, opts ...grpc.CallOption) (*GenericResponse, error)
+	AddRole(ctx context.Context, in *AddRoleRequest, opts ...grpc.CallOption) (*GenericResponse, error)
+	AddGlobalRole(ctx context.Context, in *AddGlobalRoleRequest, opts ...grpc.CallOption) (*GenericResponse, error)
 }
 
 type authorityClient struct {
@@ -33,9 +35,27 @@ func NewAuthorityClient(cc grpc.ClientConnInterface) AuthorityClient {
 	return &authorityClient{cc}
 }
 
-func (c *authorityClient) Can(ctx context.Context, in *AccessRequest, opts ...grpc.CallOption) (*AccessResponse, error) {
-	out := new(AccessResponse)
+func (c *authorityClient) Can(ctx context.Context, in *AccessRequest, opts ...grpc.CallOption) (*GenericResponse, error) {
+	out := new(GenericResponse)
 	err := c.cc.Invoke(ctx, "/api.Authority/Can", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authorityClient) AddRole(ctx context.Context, in *AddRoleRequest, opts ...grpc.CallOption) (*GenericResponse, error) {
+	out := new(GenericResponse)
+	err := c.cc.Invoke(ctx, "/api.Authority/AddRole", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authorityClient) AddGlobalRole(ctx context.Context, in *AddGlobalRoleRequest, opts ...grpc.CallOption) (*GenericResponse, error) {
+	out := new(GenericResponse)
+	err := c.cc.Invoke(ctx, "/api.Authority/AddGlobalRole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +66,9 @@ func (c *authorityClient) Can(ctx context.Context, in *AccessRequest, opts ...gr
 // All implementations must embed UnimplementedAuthorityServer
 // for forward compatibility
 type AuthorityServer interface {
-	Can(context.Context, *AccessRequest) (*AccessResponse, error)
+	Can(context.Context, *AccessRequest) (*GenericResponse, error)
+	AddRole(context.Context, *AddRoleRequest) (*GenericResponse, error)
+	AddGlobalRole(context.Context, *AddGlobalRoleRequest) (*GenericResponse, error)
 	mustEmbedUnimplementedAuthorityServer()
 }
 
@@ -54,8 +76,14 @@ type AuthorityServer interface {
 type UnimplementedAuthorityServer struct {
 }
 
-func (UnimplementedAuthorityServer) Can(context.Context, *AccessRequest) (*AccessResponse, error) {
+func (UnimplementedAuthorityServer) Can(context.Context, *AccessRequest) (*GenericResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Can not implemented")
+}
+func (UnimplementedAuthorityServer) AddRole(context.Context, *AddRoleRequest) (*GenericResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddRole not implemented")
+}
+func (UnimplementedAuthorityServer) AddGlobalRole(context.Context, *AddGlobalRoleRequest) (*GenericResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddGlobalRole not implemented")
 }
 func (UnimplementedAuthorityServer) mustEmbedUnimplementedAuthorityServer() {}
 
@@ -88,6 +116,42 @@ func _Authority_Can_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Authority_AddRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorityServer).AddRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Authority/AddRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorityServer).AddRole(ctx, req.(*AddRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Authority_AddGlobalRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddGlobalRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorityServer).AddGlobalRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Authority/AddGlobalRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorityServer).AddGlobalRole(ctx, req.(*AddGlobalRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Authority_ServiceDesc is the grpc.ServiceDesc for Authority service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +162,14 @@ var Authority_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Can",
 			Handler:    _Authority_Can_Handler,
+		},
+		{
+			MethodName: "AddRole",
+			Handler:    _Authority_AddRole_Handler,
+		},
+		{
+			MethodName: "AddGlobalRole",
+			Handler:    _Authority_AddGlobalRole_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

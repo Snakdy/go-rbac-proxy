@@ -15,3 +15,5 @@ type Adapter interface {
 
 type SubjectHasGlobalRole = func(ctx context.Context, subject, role string) (bool, error)
 type SubjectCanDoAction = func(ctx context.Context, subject, resource string, action api.Verb) (bool, error)
+type Add = func(ctx context.Context, subject, resource string, action api.Verb) error
+type AddGlobal = func(ctx context.Context, subject, role string) error

@@ -31,7 +31,7 @@ func TestAuthority_HasGlobalRole(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, nil)
+	}, nil, nil, nil)
 
 	t.Run("admin can create", func(t *testing.T) {
 		ok, err := auth.hasGlobalRole(ctx, &api.AccessRequest{

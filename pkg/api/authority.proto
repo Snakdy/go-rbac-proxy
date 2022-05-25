@@ -13,7 +13,9 @@ enum Verb {
 }
 
 service Authority {
-  rpc Can(AccessRequest) returns (AccessResponse);
+  rpc Can(AccessRequest) returns (GenericResponse);
+  rpc AddRole(AddRoleRequest) returns (GenericResponse);
+  rpc AddGlobalRole(AddGlobalRoleRequest) returns (GenericResponse);
 }
 
 message AccessRequest {
@@ -22,7 +24,18 @@ message AccessRequest {
   Verb action = 3;
 }
 
-message AccessResponse {
+message GenericResponse {
   string message = 1;
   bool ok = 2;
+}
+
+message AddRoleRequest {
+  string subject = 1;
+  string resource = 2;
+  Verb action = 3;
+}
+
+message AddGlobalRoleRequest {
+  string subject = 1;
+  string role = 2;
 }

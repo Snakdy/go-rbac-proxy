@@ -1,7 +1,7 @@
 package apimpl
 
 import (
-	"context"
+	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
 )
 
@@ -11,13 +11,13 @@ type Authority struct {
 	api.UnimplementedAuthorityServer
 	conf *Configuration
 
-	subjectHasGlobalRole SubjectHasGlobalRole
-	subjectCanDoAction   SubjectCanDoAction
+	subjectHasGlobalRole adapter.SubjectHasGlobalRole
+	subjectCanDoAction   adapter.SubjectCanDoAction
+
+	addRole       adapter.Add
+	addGlobalRole adapter.AddGlobal
 }
 
 type Configuration struct {
 	Globals Globals
 }
-
-type SubjectHasGlobalRole = func(ctx context.Context, subject, role string) (bool, error)
-type SubjectCanDoAction = func(ctx context.Context, subject, resource string, action api.Verb) (bool, error)

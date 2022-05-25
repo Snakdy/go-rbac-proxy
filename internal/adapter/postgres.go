@@ -9,6 +9,7 @@ import (
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/schemas"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -31,7 +32,7 @@ func NewPostgresAdapter(ctx context.Context, dsn string) (*PostgresAdapter, erro
 
 	// migrate
 	log.V(1).Info("running database migrations")
-	if err := database.AutoMigrate(&schemas.RoleBinding{}); err != nil {
+	if err := database.AutoMigrate(&schemas.PostgresRoleBinding{}); err != nil {
 		log.Error(err, "failed to run auto-migration")
 		return nil, err
 	}
@@ -46,7 +47,7 @@ func (p *PostgresAdapter) SubjectHasGlobalRole(ctx context.Context, subject, rol
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role", role)
 	log.V(1).Info("checking if subject has global role")
 	var count int64
-	if err := p.db.Model(&schemas.RoleBinding{}).Where("subject = ? AND resource = ?", subject, role).Count(&count).Error; err != nil {
+	if err := p.db.Model(&schemas.PostgresRoleBinding{}).Where("subject = ? AND resource = ?", subject, role).Count(&count).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.V(1).Info("matching role could not be found")
 			return false, nil
@@ -61,7 +62,7 @@ func (p *PostgresAdapter) SubjectCanDoAction(ctx context.Context, subject, resou
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String())
 	log.V(1).Info("checking if subject has role")
 	var count int64
-	if err := p.db.Model(&schemas.RoleBinding{}).Where("subject = ? AND resource = ? AND (verb = ? OR verb = 'SUDO')", subject, resource, action.String()).Count(&count).Error; err != nil {
+	if err := p.db.Model(&schemas.PostgresRoleBinding{}).Where("subject = ? AND resource = ? AND (verb = ? OR verb = 'SUDO')", subject, resource, action.String()).Count(&count).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.V(1).Info("matching role could not be found")
 			return false, nil
@@ -75,7 +76,7 @@ func (p *PostgresAdapter) SubjectCanDoAction(ctx context.Context, subject, resou
 func (p *PostgresAdapter) Add(ctx context.Context, subject, resource string, action api.Verb) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String())
 	log.V(1).Info("creating role binding")
-	if err := p.db.Create(&schemas.RoleBinding{
+	if err := p.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.PostgresRoleBinding{
 		Subject:  subject,
 		Resource: resource,
 		Verb:     action.String(),
@@ -89,7 +90,7 @@ func (p *PostgresAdapter) Add(ctx context.Context, subject, resource string, act
 func (p *PostgresAdapter) AddGlobal(ctx context.Context, subject, role string) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role")
 	log.V(1).Info("creating global role binding")
-	if err := p.db.Create(&schemas.RoleBinding{
+	if err := p.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.PostgresRoleBinding{
 		Subject:  subject,
 		Resource: role,
 	}).Error; err != nil {
