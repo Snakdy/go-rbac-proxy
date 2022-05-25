@@ -6,17 +6,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
 	"gitlab.com/autokubeops/serverless"
+	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/apimpl"
+	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"net/http"
+	"os"
 )
 
 type environment struct {
-	Port     int `envconfig:"PORT" default:"8080"`
-	LogLevel int `split_words:"true"`
+	Port       int    `envconfig:"PORT" default:"8080"`
+	LogLevel   int    `split_words:"true"`
+	ConfigPath string `split_words:"true" required:"true"`
 }
 
 func main() {
@@ -27,11 +31,23 @@ func main() {
 	// configure logging
 	zc := zap.NewProductionConfig()
 	zc.Level = zap.NewAtomicLevelAt(zapcore.Level(e.LogLevel * -1))
-	log, _ := logging.NewZap(context.TODO(), zc)
+	log, ctx := logging.NewZap(context.TODO(), zc)
+
+	c, err := config.Read(ctx, e.ConfigPath)
+	if err != nil {
+		os.Exit(1)
+		return
+	}
+	adp, err := adapter.New(ctx, c)
+	if err != nil {
+		log.Error(err, "failed to instantiate adapter")
+		os.Exit(1)
+		return
+	}
 
 	// configure grpc
 	gsrv := grpc.NewServer()
-	api.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(nil, nil, nil, nil, nil))
+	api.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp.SubjectHasGlobalRole, adp.SubjectCanDoAction, adp.Add, adp.AddGlobal))
 
 	// configure routing
 	router := mux.NewRouter()

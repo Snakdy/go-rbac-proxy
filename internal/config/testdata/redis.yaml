@@ -1,0 +1,8 @@
+globals:
+  SUPER:
+    - SUDO
+adapter:
+  mode: redis
+  redis:
+    addrs:
+      - localhost:6379

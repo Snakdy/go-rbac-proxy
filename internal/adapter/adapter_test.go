@@ -2,12 +2,63 @@ package adapter
 
 import (
 	"context"
+	"github.com/alicebob/miniredis/v2"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
+	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
+	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
 	"testing"
 )
+
+func TestNew(t *testing.T) {
+	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
+
+	// test that postgres is configured correctly
+	t.Run("postgres", func(t *testing.T) {
+		postgres := newPostgres(t)
+		defer postgres.Stop()
+
+		adp, err := New(ctx, &config.Configuration{
+			Adapter: config.Adapter{
+				Mode: "postgres",
+				Postgres: config.PostgresAdapter{
+					DSN: "user=prism password=hunter2 dbname=prism host=localhost port=5432 sslmode=disable",
+				},
+			},
+		})
+		assert.NoError(t, err)
+		assert.NotNil(t, adp)
+	})
+
+	// test that redis is configured correctly
+	t.Run("redis", func(t *testing.T) {
+		rdb := miniredis.RunT(t)
+
+		adp, err := New(ctx, &config.Configuration{
+			Adapter: config.Adapter{
+				Mode: "redis",
+				Redis: redis.UniversalOptions{
+					Addrs: []string{rdb.Addr()},
+				},
+			},
+		})
+		assert.NoError(t, err)
+		assert.NotNil(t, adp)
+	})
+
+	// test that unknown adapters err
+	t.Run("unknown adapter errors", func(t *testing.T) {
+		adp, err := New(ctx, &config.Configuration{
+			Adapter: config.Adapter{
+				Mode: "foobar",
+			},
+		})
+		assert.Error(t, err)
+		assert.Nil(t, adp)
+	})
+}
 
 func TestAdapter_Add(t *testing.T) {
 	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))

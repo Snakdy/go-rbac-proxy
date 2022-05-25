@@ -5,11 +5,12 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/stretchr/testify/assert"
+	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
 	"testing"
 )
 
-var conf = Configuration{
+var conf = config.Configuration{
 	Globals: map[string][]string{
 		"SUPER": {
 			api.Verb_SUDO.String(),
