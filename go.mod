@@ -3,11 +3,13 @@ module gitlab.com/go-prism/go-rbac-proxy
 go 1.18
 
 require (
+	github.com/alicebob/miniredis/v2 v2.21.0
 	github.com/djcass44/go-utils/logging v0.1.0
 	github.com/djcass44/go-utils/orm v0.1.0
 	github.com/djcass44/go-utils/utilities v0.1.0
 	github.com/fergusstrange/embedded-postgres v1.15.0
 	github.com/go-logr/logr v1.2.3
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.7.1
@@ -20,8 +22,11 @@ require (
 )
 
 require (
+	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/djcass44/go-tracer v0.2.0 // indirect
 	github.com/djcass44/go-utils v0.2.1-0.20210516001550-3d288882b7f4 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
@@ -46,6 +51,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
+	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
 	gitlab.com/av1o/cap10 v0.4.0 // indirect
 	go.opentelemetry.io/otel v1.7.0 // indirect
 	go.opentelemetry.io/otel/trace v1.7.0 // indirect
