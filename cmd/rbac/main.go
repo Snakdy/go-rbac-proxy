@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
 	"os"
 )
@@ -46,7 +47,7 @@ func main() {
 	}
 
 	// configure grpc
-	gsrv := grpc.NewServer()
+	gsrv := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 	api.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp.SubjectHasGlobalRole, adp.SubjectCanDoAction, adp.Add, adp.AddGlobal))
 
 	// configure routing
