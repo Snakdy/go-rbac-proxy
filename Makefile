@@ -10,7 +10,7 @@ generate:
     		-I${GOPATH}/pkg/mod \
     		--go_out=. --go_opt=paths=source_relative \
             --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-            pkg/api/authority.proto
+            pkg/rbac/authority.proto
 	# https://stackoverflow.com/a/37335452
 	# removes the 'omitempty' json tag
-	ls pkg/api/*.pb.go | xargs -n1 -IX bash -c 'sed s/,omitempty// X > X.tmp && mv X{.tmp,}'
+	ls pkg/rbac/*.pb.go | xargs -n1 -IX bash -c 'sed s/,omitempty// X > X.tmp && mv X{.tmp,}'

@@ -17,6 +17,7 @@ require (
 	go.uber.org/zap v1.21.0
 	google.golang.org/grpc v1.46.0
 	google.golang.org/protobuf v1.28.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gorm.io/driver/postgres v1.3.6
 	gorm.io/gorm v1.23.5
 )
@@ -64,5 +65,4 @@ require (
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220426171045-31bebdecfb46 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

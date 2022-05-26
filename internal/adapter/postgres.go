@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/djcass44/go-utils/orm"
 	"github.com/go-logr/logr"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
+	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/schemas"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -58,7 +58,7 @@ func (p *PostgresAdapter) SubjectHasGlobalRole(ctx context.Context, subject, rol
 	return count > 0, nil
 }
 
-func (p *PostgresAdapter) SubjectCanDoAction(ctx context.Context, subject, resource string, action api.Verb) (bool, error) {
+func (p *PostgresAdapter) SubjectCanDoAction(ctx context.Context, subject, resource string, action rbac.Verb) (bool, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("postgres")
 	log.V(1).Info("checking if subject has role")
 	var count int64
@@ -73,7 +73,7 @@ func (p *PostgresAdapter) SubjectCanDoAction(ctx context.Context, subject, resou
 	return count > 0, nil
 }
 
-func (p *PostgresAdapter) Add(ctx context.Context, subject, resource string, action api.Verb) error {
+func (p *PostgresAdapter) Add(ctx context.Context, subject, resource string, action rbac.Verb) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("postgres")
 	log.V(1).Info("creating role binding")
 	if err := p.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.PostgresRoleBinding{

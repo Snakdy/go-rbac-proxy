@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.20.1
-// source: pkg/api/authority.proto
+// source: pkg/rbac/authority.proto
 
-package api
+package rbac
 
 import (
 	context "context"
@@ -173,5 +173,5 @@ var Authority_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pkg/api/authority.proto",
+	Metadata: "pkg/rbac/authority.proto",
 }

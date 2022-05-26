@@ -6,7 +6,7 @@ import (
 	"github.com/go-logr/logr"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
+	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 )
 
 func NewAuthority(conf *config.Configuration, subjectHasGlobalRole adapter.SubjectHasGlobalRole, subjectCanDoAction adapter.SubjectCanDoAction, add adapter.Add, addGlobal adapter.AddGlobal) *Authority {
@@ -19,7 +19,7 @@ func NewAuthority(conf *config.Configuration, subjectHasGlobalRole adapter.Subje
 	}
 }
 
-func (a *Authority) Can(ctx context.Context, request *api.AccessRequest) (*api.GenericResponse, error) {
+func (a *Authority) Can(ctx context.Context, request *rbac.AccessRequest) (*rbac.GenericResponse, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.Info("checking if subject can perform action on resource")
 	// check global roles
@@ -28,47 +28,47 @@ func (a *Authority) Can(ctx context.Context, request *api.AccessRequest) (*api.G
 		return nil, err
 	}
 	if ok {
-		return &api.GenericResponse{Message: "", Ok: true}, nil
+		return &rbac.GenericResponse{Message: "", Ok: true}, nil
 	}
 	ok, err = a.hasRole(ctx, request)
 	if ok {
-		return &api.GenericResponse{Message: "", Ok: true}, nil
+		return &rbac.GenericResponse{Message: "", Ok: true}, nil
 	}
-	return &api.GenericResponse{Message: "", Ok: false}, nil
+	return &rbac.GenericResponse{Message: "", Ok: false}, nil
 }
 
-func (a *Authority) AddRole(ctx context.Context, request *api.AddRoleRequest) (*api.GenericResponse, error) {
+func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (*rbac.GenericResponse, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.Info("creating role binding to role")
 	if err := a.addRole(ctx, request.GetSubject(), request.GetResource(), request.GetAction()); err != nil {
 		return nil, err
 	}
-	return &api.GenericResponse{
+	return &rbac.GenericResponse{
 		Message: "",
 		Ok:      true,
 	}, nil
 }
 
-func (a *Authority) AddGlobalRole(ctx context.Context, request *api.AddGlobalRoleRequest) (*api.GenericResponse, error) {
+func (a *Authority) AddGlobalRole(ctx context.Context, request *rbac.AddGlobalRoleRequest) (*rbac.GenericResponse, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Role", request.GetRole())
 	log.Info("creating role binding to global role")
 	if err := a.addGlobalRole(ctx, request.GetSubject(), request.GetRole()); err != nil {
 		return nil, err
 	}
-	return &api.GenericResponse{
+	return &rbac.GenericResponse{
 		Message: "",
 		Ok:      true,
 	}, nil
 }
 
-func canPerformAction(actions []string, verb api.Verb) bool {
+func canPerformAction(actions []string, verb rbac.Verb) bool {
 	// if the role has no actions, skip it
 	if len(actions) == 0 {
 		return false
 	}
 	// if the only action is SUDO don't skip it
 	if len(actions) == 1 {
-		if actions[0] == api.Verb_SUDO.String() {
+		if actions[0] == rbac.Verb_SUDO.String() {
 			return true
 		}
 	}
@@ -77,14 +77,14 @@ func canPerformAction(actions []string, verb api.Verb) bool {
 	return sliceutils.Includes(actions, verb.String())
 }
 
-func (a *Authority) hasRole(ctx context.Context, request *api.AccessRequest) (bool, error) {
+func (a *Authority) hasRole(ctx context.Context, request *rbac.AccessRequest) (bool, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.V(1).Info("checking roles")
 
 	return a.subjectCanDoAction(ctx, request.GetSubject(), request.GetResource(), request.GetAction())
 }
 
-func (a *Authority) hasGlobalRole(ctx context.Context, request *api.AccessRequest) (bool, error) {
+func (a *Authority) hasGlobalRole(ctx context.Context, request *rbac.AccessRequest) (bool, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.V(1).Info("checking global roles")
 	// iterate through each of the global

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/go-redis/redis/v8"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
+	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 )
 
 type RedisAdapter struct {
@@ -42,11 +42,11 @@ func (r *RedisAdapter) SubjectHasGlobalRole(ctx context.Context, subject, role s
 	return val > 0, nil
 }
 
-func (r *RedisAdapter) SubjectCanDoAction(ctx context.Context, subject, resource string, action api.Verb) (bool, error) {
+func (r *RedisAdapter) SubjectCanDoAction(ctx context.Context, subject, resource string, action rbac.Verb) (bool, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("redis")
 	log.V(1).Info("checking if subject has role")
 	key := getKey(subject, resource, &action)
-	sudoAction := api.Verb_SUDO
+	sudoAction := rbac.Verb_SUDO
 	keySudo := getKey(subject, resource, &sudoAction)
 	log.V(2).Info("getting redis keys", "Keys", []string{key, keySudo})
 	// fetch the value from redis
@@ -73,7 +73,7 @@ func (r *RedisAdapter) SubjectCanDoAction(ctx context.Context, subject, resource
 	return false, nil
 }
 
-func (r *RedisAdapter) Add(ctx context.Context, subject, resource string, action api.Verb) error {
+func (r *RedisAdapter) Add(ctx context.Context, subject, resource string, action rbac.Verb) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("redis")
 	log.V(1).Info("creating role binding")
 	key := getKey(subject, resource, &action)
@@ -87,7 +87,7 @@ func (r *RedisAdapter) Add(ctx context.Context, subject, resource string, action
 }
 
 func (r *RedisAdapter) AddGlobal(ctx context.Context, subject, role string) error {
-	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role").WithName("redis")
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role", role).WithName("redis")
 	log.V(1).Info("creating global role binding")
 	key := getKey(subject, role, nil)
 	log.V(2).Info("setting redis key", "Key", key, "Value", 1)
@@ -99,7 +99,7 @@ func (r *RedisAdapter) AddGlobal(ctx context.Context, subject, role string) erro
 	return nil
 }
 
-func getKey(subject, resource string, action *api.Verb) string {
+func getKey(subject, resource string, action *rbac.Verb) string {
 	if action == nil {
 		return fmt.Sprintf("%s-%s", subject, resource)
 	}

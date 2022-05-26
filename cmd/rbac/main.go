@@ -9,7 +9,8 @@ import (
 	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/apimpl"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
+	grpc_logr "gitlab.com/go-prism/go-rbac-proxy/pkg/grpc/logging"
+	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -47,8 +48,13 @@ func main() {
 	}
 
 	// configure grpc
-	gsrv := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
-	api.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp.SubjectHasGlobalRole, adp.SubjectCanDoAction, adp.Add, adp.AddGlobal))
+	logRpc := grpc_logr.NewLogrInterceptor(log)
+	// create and configure the server
+	gsrv := grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.UnaryInterceptor(logRpc.Unary),
+	)
+	rbac.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp.SubjectHasGlobalRole, adp.SubjectCanDoAction, adp.Add, adp.AddGlobal))
 
 	// configure routing
 	router := mux.NewRouter()

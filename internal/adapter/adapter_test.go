@@ -8,7 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/api"
+	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"testing"
 )
 
@@ -80,9 +80,9 @@ func TestAdapter_Add(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			// create duplicate roles
-			assert.NoError(t, tt.adapter.Add(ctx, "john.doe", "foo", api.Verb_SUDO))
-			assert.NoError(t, tt.adapter.Add(ctx, "jane.doe", "foo", api.Verb_SUDO))
-			assert.NoError(t, tt.adapter.Add(ctx, "john.doe", "foo", api.Verb_SUDO))
+			assert.NoError(t, tt.adapter.Add(ctx, "john.doe", "foo", rbac.Verb_SUDO))
+			assert.NoError(t, tt.adapter.Add(ctx, "jane.doe", "foo", rbac.Verb_SUDO))
+			assert.NoError(t, tt.adapter.Add(ctx, "john.doe", "foo", rbac.Verb_SUDO))
 		})
 	}
 }
@@ -107,36 +107,36 @@ func TestNewAdapter(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			// create some roles
-			assert.NoError(t, tt.adapter.Add(ctx, "john.doe", "foo", api.Verb_SUDO))
-			assert.NoError(t, tt.adapter.Add(ctx, "jane.doe", "foo", api.Verb_READ))
+			assert.NoError(t, tt.adapter.Add(ctx, "john.doe", "foo", rbac.Verb_SUDO))
+			assert.NoError(t, tt.adapter.Add(ctx, "jane.doe", "foo", rbac.Verb_READ))
 
 			// verify the roles
 			var subCases = []struct {
 				name string
 				sub  string
 				res  string
-				verb api.Verb
+				verb rbac.Verb
 				ok   bool
 			}{
 				{
 					"sudo can create",
 					"john.doe",
 					"foo",
-					api.Verb_CREATE,
+					rbac.Verb_CREATE,
 					true,
 				},
 				{
 					"reader can read",
 					"jane.doe",
 					"foo",
-					api.Verb_READ,
+					rbac.Verb_READ,
 					true,
 				},
 				{
 					"reader cannot delete",
 					"jane.doe",
 					"foo",
-					api.Verb_DELETE,
+					rbac.Verb_DELETE,
 					false,
 				},
 			}
