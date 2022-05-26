@@ -78,14 +78,19 @@ func canPerformAction(actions []string, verb rbac.Verb) bool {
 }
 
 func (a *Authority) hasRole(ctx context.Context, request *rbac.AccessRequest) (bool, error) {
-	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String(), "Global", false)
 	log.V(1).Info("checking roles")
 
-	return a.subjectCanDoAction(ctx, request.GetSubject(), request.GetResource(), request.GetAction())
+	ok, err := a.subjectCanDoAction(ctx, request.GetSubject(), request.GetResource(), request.GetAction())
+	if err != nil {
+		return false, err
+	}
+	log.Info("successfully checked role membership", "Member", ok)
+	return ok, nil
 }
 
 func (a *Authority) hasGlobalRole(ctx context.Context, request *rbac.AccessRequest) (bool, error) {
-	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String(), "Global", true)
 	log.V(1).Info("checking global roles")
 	// iterate through each of the global
 	// roles
@@ -106,11 +111,11 @@ func (a *Authority) hasGlobalRole(ctx context.Context, request *rbac.AccessReque
 			log.Error(err, "failed to check if subject has role")
 			return false, err
 		}
-		log.V(2).Info("successfully checked role membership", "Member", ok)
+		log.Info("successfully checked role membership", "Member", ok)
 		if ok {
 			return true, nil
 		}
 	}
-	log.V(1).Info("failed to locate matching global role")
+	log.Info("successfully checked role membership", "Member", false)
 	return false, nil
 }
