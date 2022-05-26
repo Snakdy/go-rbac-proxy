@@ -11,9 +11,7 @@ type Adapter interface {
 
 	Add(ctx context.Context, subject, resource string, action rbac.Verb) error
 	AddGlobal(ctx context.Context, subject, role string) error
-}
 
-type SubjectHasGlobalRole = func(ctx context.Context, subject, role string) (bool, error)
-type SubjectCanDoAction = func(ctx context.Context, subject, resource string, action rbac.Verb) (bool, error)
-type Add = func(ctx context.Context, subject, resource string, action rbac.Verb) error
-type AddGlobal = func(ctx context.Context, subject, role string) error
+	ListBySub(ctx context.Context, subject string) ([]*rbac.RoleBinding, error)
+	ListByRole(ctx context.Context, role string) ([]*rbac.RoleBinding, error)
+}

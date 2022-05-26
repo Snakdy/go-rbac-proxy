@@ -12,10 +12,19 @@ enum Verb {
   SUDO = 4;
 }
 
+message RoleBinding {
+  string subject = 1;
+  string resource = 2;
+  Verb action = 3;
+}
+
 service Authority {
   rpc Can(AccessRequest) returns (GenericResponse);
   rpc AddRole(AddRoleRequest) returns (GenericResponse);
   rpc AddGlobalRole(AddGlobalRoleRequest) returns (GenericResponse);
+
+  rpc ListBySub(ListBySubRequest) returns (ListResponse);
+  rpc ListByRole(ListByRoleRequest) returns (ListResponse);
 }
 
 message AccessRequest {
@@ -38,4 +47,16 @@ message AddRoleRequest {
 message AddGlobalRoleRequest {
   string subject = 1;
   string role = 2;
+}
+
+message ListBySubRequest {
+  string subject = 1;
+}
+
+message ListByRoleRequest {
+  string role = 1;
+}
+
+message ListResponse {
+  repeated RoleBinding results = 1;
 }

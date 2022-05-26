@@ -14,6 +14,7 @@ import (
 )
 
 type PostgresAdapter struct {
+	Unimplemented
 	db *gorm.DB
 }
 
@@ -98,4 +99,48 @@ func (p *PostgresAdapter) AddGlobal(ctx context.Context, subject, role string) e
 		return err
 	}
 	return nil
+}
+
+func (p *PostgresAdapter) ListBySub(ctx context.Context, subject string) ([]*rbac.RoleBinding, error) {
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject).WithName("redis")
+	log.V(1).Info("scanning for roles with subject")
+
+	var results []schemas.PostgresRoleBinding
+	if err := p.db.Where("subject = ?", subject).Find(&results).Error; err != nil {
+		log.Error(err, "failed to find role bindings by subject")
+		return nil, err
+	}
+
+	items := make([]*rbac.RoleBinding, len(results))
+	for i := range results {
+		items[i] = &rbac.RoleBinding{
+			Subject:  results[i].Subject,
+			Resource: results[i].Resource,
+			Action:   rbac.Verb(rbac.Verb_value[results[i].Verb]),
+		}
+	}
+	log.Info("successfully fetched roles for subject", "Count", len(items))
+	return items, nil
+}
+
+func (p *PostgresAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.RoleBinding, error) {
+	log := logr.FromContextOrDiscard(ctx).WithValues("Role", role).WithName("redis")
+	log.V(1).Info("scanning for roles with subject")
+
+	var results []schemas.PostgresRoleBinding
+	if err := p.db.Where("resource = ?", role).Find(&results).Error; err != nil {
+		log.Error(err, "failed to find role bindings by role")
+		return nil, err
+	}
+
+	items := make([]*rbac.RoleBinding, len(results))
+	for i := range results {
+		items[i] = &rbac.RoleBinding{
+			Subject:  results[i].Subject,
+			Resource: results[i].Resource,
+			Action:   rbac.Verb(rbac.Verb_value[results[i].Verb]),
+		}
+	}
+	log.Info("successfully fetched bindings for role", "Count", len(items))
+	return items, nil
 }

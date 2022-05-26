@@ -25,6 +25,8 @@ type AuthorityClient interface {
 	Can(ctx context.Context, in *AccessRequest, opts ...grpc.CallOption) (*GenericResponse, error)
 	AddRole(ctx context.Context, in *AddRoleRequest, opts ...grpc.CallOption) (*GenericResponse, error)
 	AddGlobalRole(ctx context.Context, in *AddGlobalRoleRequest, opts ...grpc.CallOption) (*GenericResponse, error)
+	ListBySub(ctx context.Context, in *ListBySubRequest, opts ...grpc.CallOption) (*ListResponse, error)
+	ListByRole(ctx context.Context, in *ListByRoleRequest, opts ...grpc.CallOption) (*ListResponse, error)
 }
 
 type authorityClient struct {
@@ -62,6 +64,24 @@ func (c *authorityClient) AddGlobalRole(ctx context.Context, in *AddGlobalRoleRe
 	return out, nil
 }
 
+func (c *authorityClient) ListBySub(ctx context.Context, in *ListBySubRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
+	err := c.cc.Invoke(ctx, "/api.Authority/ListBySub", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authorityClient) ListByRole(ctx context.Context, in *ListByRoleRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
+	err := c.cc.Invoke(ctx, "/api.Authority/ListByRole", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthorityServer is the server API for Authority service.
 // All implementations must embed UnimplementedAuthorityServer
 // for forward compatibility
@@ -69,6 +89,8 @@ type AuthorityServer interface {
 	Can(context.Context, *AccessRequest) (*GenericResponse, error)
 	AddRole(context.Context, *AddRoleRequest) (*GenericResponse, error)
 	AddGlobalRole(context.Context, *AddGlobalRoleRequest) (*GenericResponse, error)
+	ListBySub(context.Context, *ListBySubRequest) (*ListResponse, error)
+	ListByRole(context.Context, *ListByRoleRequest) (*ListResponse, error)
 	mustEmbedUnimplementedAuthorityServer()
 }
 
@@ -84,6 +106,12 @@ func (UnimplementedAuthorityServer) AddRole(context.Context, *AddRoleRequest) (*
 }
 func (UnimplementedAuthorityServer) AddGlobalRole(context.Context, *AddGlobalRoleRequest) (*GenericResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddGlobalRole not implemented")
+}
+func (UnimplementedAuthorityServer) ListBySub(context.Context, *ListBySubRequest) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBySub not implemented")
+}
+func (UnimplementedAuthorityServer) ListByRole(context.Context, *ListByRoleRequest) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListByRole not implemented")
 }
 func (UnimplementedAuthorityServer) mustEmbedUnimplementedAuthorityServer() {}
 
@@ -152,6 +180,42 @@ func _Authority_AddGlobalRole_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Authority_ListBySub_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBySubRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorityServer).ListBySub(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Authority/ListBySub",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorityServer).ListBySub(ctx, req.(*ListBySubRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Authority_ListByRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListByRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorityServer).ListByRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Authority/ListByRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorityServer).ListByRole(ctx, req.(*ListByRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Authority_ServiceDesc is the grpc.ServiceDesc for Authority service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +234,14 @@ var Authority_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddGlobalRole",
 			Handler:    _Authority_AddGlobalRole_Handler,
+		},
+		{
+			MethodName: "ListBySub",
+			Handler:    _Authority_ListBySub_Handler,
+		},
+		{
+			MethodName: "ListByRole",
+			Handler:    _Authority_ListByRole_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

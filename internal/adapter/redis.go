@@ -7,9 +7,11 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-redis/redis/v8"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
+	"strings"
 )
 
 type RedisAdapter struct {
+	Unimplemented
 	client redis.UniversalClient
 }
 
@@ -97,6 +99,68 @@ func (r *RedisAdapter) AddGlobal(ctx context.Context, subject, role string) erro
 		return err
 	}
 	return nil
+}
+
+func (r *RedisAdapter) ListBySub(ctx context.Context, subject string) ([]*rbac.RoleBinding, error) {
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject).WithName("redis")
+	log.V(1).Info("scanning for roles with subject")
+
+	var items []*rbac.RoleBinding
+
+	match := fmt.Sprintf("%s-*", subject)
+	log.V(2).Info("scanning for keys", "Match", match)
+	iter := r.client.Scan(ctx, 0, match, 0).Iterator()
+	for iter.Next(ctx) {
+		// do something
+		items = append(items, parseRoleBinding(iter.Val()))
+	}
+	if err := iter.Err(); err != nil {
+		log.Error(err, "failed to list roles by subject")
+		return nil, err
+	}
+	log.Info("successfully fetched roles for subject", "Count", len(items))
+	return items, nil
+}
+
+func (r *RedisAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.RoleBinding, error) {
+	log := logr.FromContextOrDiscard(ctx).WithValues("Role", role).WithName("redis")
+	log.V(1).Info("scanning for bindings with role")
+
+	var items []*rbac.RoleBinding
+
+	iter := r.client.Scan(ctx, 0, "*", 0).Iterator()
+	for iter.Next(ctx) {
+		// do something
+		rb := parseRoleBinding(iter.Val())
+		if rb.GetResource() != role {
+			continue
+		}
+		items = append(items, rb)
+	}
+	if err := iter.Err(); err != nil {
+		log.Error(err, "failed to list roles by subject")
+		return nil, err
+	}
+	log.Info("successfully fetched bindings for role", "Count", len(items))
+	return items, nil
+}
+
+func parseRoleBinding(s string) *rbac.RoleBinding {
+	var verb rbac.Verb
+	// split the value
+	bits := strings.Split(s, "-")
+	// there will always be 2 chunks, so grab them first
+	sub := bits[0]
+	resource := bits[1]
+	// if there's a 3rd chunk, use that as the verb
+	if len(bits) > 2 {
+		verb = rbac.Verb(rbac.Verb_value[bits[2]])
+	}
+	return &rbac.RoleBinding{
+		Subject:  sub,
+		Resource: resource,
+		Action:   verb,
+	}
 }
 
 func getKey(subject, resource string, action *rbac.Verb) string {

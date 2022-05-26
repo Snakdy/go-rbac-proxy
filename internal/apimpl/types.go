@@ -10,9 +10,5 @@ type Authority struct {
 	rbac.UnimplementedAuthorityServer
 	conf *config.Configuration
 
-	subjectHasGlobalRole adapter.SubjectHasGlobalRole
-	subjectCanDoAction   adapter.SubjectCanDoAction
-
-	addRole       adapter.Add
-	addGlobalRole adapter.AddGlobal
+	receiver adapter.Adapter
 }

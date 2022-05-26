@@ -150,3 +150,45 @@ func TestNewAdapter(t *testing.T) {
 		})
 	}
 }
+
+func TestAdapter_List(t *testing.T) {
+	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
+
+	var cases = []struct {
+		name    string
+		adapter Adapter
+	}{
+		{
+			"postgresql",
+			newPostgresAdapter(ctx, t),
+		},
+		{
+			"redis",
+			newRedisAdapter(ctx, t),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			// create data
+			assert.NoError(t, tt.adapter.Add(ctx, "john.doe", "foo", rbac.Verb_SUDO))
+			assert.NoError(t, tt.adapter.Add(ctx, "jane.doe", "foo", rbac.Verb_SUDO))
+			assert.NoError(t, tt.adapter.AddGlobal(ctx, "jane.doe", "FOOBAR"))
+			assert.NoError(t, tt.adapter.AddGlobal(ctx, "john.doe", "FOOBAR"))
+
+			// list by subject
+			t.Run("list by subject", func(t *testing.T) {
+				res, err := tt.adapter.ListBySub(ctx, "john.doe")
+				assert.NoError(t, err)
+				assert.Len(t, res, 2)
+			})
+
+			// list by role/resource
+			t.Run("list by role or resource", func(t *testing.T) {
+				res, err := tt.adapter.ListByRole(ctx, "FOOBAR")
+				assert.NoError(t, err)
+				assert.Len(t, res, 2)
+			})
+		})
+	}
+}

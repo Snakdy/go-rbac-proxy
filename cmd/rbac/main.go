@@ -54,7 +54,7 @@ func main() {
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.UnaryInterceptor(logRpc.Unary),
 	)
-	rbac.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp.SubjectHasGlobalRole, adp.SubjectCanDoAction, adp.Add, adp.AddGlobal))
+	rbac.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp))
 
 	// configure routing
 	router := mux.NewRouter()

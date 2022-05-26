@@ -9,13 +9,10 @@ import (
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 )
 
-func NewAuthority(conf *config.Configuration, subjectHasGlobalRole adapter.SubjectHasGlobalRole, subjectCanDoAction adapter.SubjectCanDoAction, add adapter.Add, addGlobal adapter.AddGlobal) *Authority {
+func NewAuthority(conf *config.Configuration, receiver adapter.Adapter) *Authority {
 	return &Authority{
-		conf:                 conf,
-		subjectHasGlobalRole: subjectHasGlobalRole,
-		subjectCanDoAction:   subjectCanDoAction,
-		addRole:              add,
-		addGlobalRole:        addGlobal,
+		conf:     conf,
+		receiver: receiver,
 	}
 }
 
@@ -40,7 +37,7 @@ func (a *Authority) Can(ctx context.Context, request *rbac.AccessRequest) (*rbac
 func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (*rbac.GenericResponse, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.Info("creating role binding to role")
-	if err := a.addRole(ctx, request.GetSubject(), request.GetResource(), request.GetAction()); err != nil {
+	if err := a.receiver.Add(ctx, request.GetSubject(), request.GetResource(), request.GetAction()); err != nil {
 		return nil, err
 	}
 	return &rbac.GenericResponse{
@@ -52,7 +49,7 @@ func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (
 func (a *Authority) AddGlobalRole(ctx context.Context, request *rbac.AddGlobalRoleRequest) (*rbac.GenericResponse, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Role", request.GetRole())
 	log.Info("creating role binding to global role")
-	if err := a.addGlobalRole(ctx, request.GetSubject(), request.GetRole()); err != nil {
+	if err := a.receiver.AddGlobal(ctx, request.GetSubject(), request.GetRole()); err != nil {
 		return nil, err
 	}
 	return &rbac.GenericResponse{
@@ -81,7 +78,7 @@ func (a *Authority) hasRole(ctx context.Context, request *rbac.AccessRequest) (b
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String(), "Global", false)
 	log.V(1).Info("checking roles")
 
-	ok, err := a.subjectCanDoAction(ctx, request.GetSubject(), request.GetResource(), request.GetAction())
+	ok, err := a.receiver.SubjectCanDoAction(ctx, request.GetSubject(), request.GetResource(), request.GetAction())
 	if err != nil {
 		return false, err
 	}
@@ -106,7 +103,7 @@ func (a *Authority) hasGlobalRole(ctx context.Context, request *rbac.AccessReque
 		log.V(2).Info("verb matched, checking if subject has the role")
 		// check if the subject actually has
 		// the role
-		ok, err := a.subjectHasGlobalRole(ctx, request.GetSubject(), k)
+		ok, err := a.receiver.SubjectHasGlobalRole(ctx, request.GetSubject(), k)
 		if err != nil {
 			log.Error(err, "failed to check if subject has role")
 			return false, err
