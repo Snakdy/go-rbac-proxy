@@ -4,6 +4,8 @@ package api;
 
 option go_package = "gitlab.com/go-prism/go-rbac-proxy/pkg/rbac";
 
+import "google/protobuf/empty.proto";
+
 enum Verb {
   CREATE = 0;
   READ = 1;
@@ -25,6 +27,7 @@ service Authority {
 
   rpc ListBySub(ListBySubRequest) returns (ListResponse);
   rpc ListByRole(ListByRoleRequest) returns (ListResponse);
+  rpc List(google.protobuf.Empty) returns (ListResponse);
 }
 
 message AccessRequest {

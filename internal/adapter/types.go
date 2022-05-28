@@ -14,4 +14,5 @@ type Adapter interface {
 
 	ListBySub(ctx context.Context, subject string) ([]*rbac.RoleBinding, error)
 	ListByRole(ctx context.Context, role string) ([]*rbac.RoleBinding, error)
+	List(context.Context) ([]*rbac.RoleBinding, error)
 }

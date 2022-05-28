@@ -145,6 +145,26 @@ func (r *RedisAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.Rol
 	return items, nil
 }
 
+func (r *RedisAdapter) List(ctx context.Context) ([]*rbac.RoleBinding, error) {
+	log := logr.FromContextOrDiscard(ctx).WithName("redis")
+	log.V(1).Info("scanning for bindings")
+
+	var items []*rbac.RoleBinding
+
+	iter := r.client.Scan(ctx, 0, "*", 0).Iterator()
+	for iter.Next(ctx) {
+		// do something
+		rb := parseRoleBinding(iter.Val())
+		items = append(items, rb)
+	}
+	if err := iter.Err(); err != nil {
+		log.Error(err, "failed to list roles")
+		return nil, err
+	}
+	log.Info("successfully fetched bindings", "Count", len(items))
+	return items, nil
+}
+
 func parseRoleBinding(s string) *rbac.RoleBinding {
 	var verb rbac.Verb
 	// split the value

@@ -144,3 +144,25 @@ func (p *PostgresAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.
 	log.Info("successfully fetched bindings for role", "Count", len(items))
 	return items, nil
 }
+
+func (p *PostgresAdapter) List(ctx context.Context) ([]*rbac.RoleBinding, error) {
+	log := logr.FromContextOrDiscard(ctx).WithName("redis")
+	log.V(1).Info("scanning for roles")
+
+	var results []schemas.PostgresRoleBinding
+	if err := p.db.Find(&results).Error; err != nil {
+		log.Error(err, "failed to find role bindings")
+		return nil, err
+	}
+
+	items := make([]*rbac.RoleBinding, len(results))
+	for i := range results {
+		items[i] = &rbac.RoleBinding{
+			Subject:  results[i].Subject,
+			Resource: results[i].Resource,
+			Action:   rbac.Verb(rbac.Verb_value[results[i].Verb]),
+		}
+	}
+	log.Info("successfully fetched bindings", "Count", len(items))
+	return items, nil
+}

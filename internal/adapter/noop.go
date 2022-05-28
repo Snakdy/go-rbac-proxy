@@ -32,3 +32,7 @@ func (*Unimplemented) ListBySub(context.Context, string) ([]*rbac.RoleBinding, e
 func (*Unimplemented) ListByRole(context.Context, string) ([]*rbac.RoleBinding, error) {
 	return nil, status.Error(codes.Unimplemented, "unimplemented")
 }
+
+func (*Unimplemented) List(context.Context) ([]*rbac.RoleBinding, error) {
+	return nil, status.Error(codes.Unimplemented, "unimplemented")
+}

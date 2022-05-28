@@ -7,6 +7,7 @@ import (
 	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func NewAuthority(conf *config.Configuration, receiver adapter.Adapter) *Authority {
@@ -44,6 +45,36 @@ func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (
 		Message: "",
 		Ok:      true,
 	}, nil
+}
+
+func (a *Authority) ListBySub(ctx context.Context, request *rbac.ListBySubRequest) (*rbac.ListResponse, error) {
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject())
+	log.Info("listing role bindings for subject")
+	items, err := a.receiver.ListBySub(ctx, request.GetSubject())
+	if err != nil {
+		return nil, err
+	}
+	return &rbac.ListResponse{Results: items}, nil
+}
+
+func (a *Authority) ListByRole(ctx context.Context, request *rbac.ListByRoleRequest) (*rbac.ListResponse, error) {
+	log := logr.FromContextOrDiscard(ctx).WithValues("Role", request.GetRole())
+	log.Info("listing role bindings for role")
+	items, err := a.receiver.ListByRole(ctx, request.GetRole())
+	if err != nil {
+		return nil, err
+	}
+	return &rbac.ListResponse{Results: items}, nil
+}
+
+func (a *Authority) List(ctx context.Context, _ *emptypb.Empty) (*rbac.ListResponse, error) {
+	log := logr.FromContextOrDiscard(ctx)
+	log.Info("listing role bindings")
+	items, err := a.receiver.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &rbac.ListResponse{Results: items}, nil
 }
 
 func (a *Authority) AddGlobalRole(ctx context.Context, request *rbac.AddGlobalRoleRequest) (*rbac.GenericResponse, error) {

@@ -189,6 +189,13 @@ func TestAdapter_List(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Len(t, res, 2)
 			})
+
+			// list
+			t.Run("list all", func(t *testing.T) {
+				res, err := tt.adapter.List(ctx)
+				assert.NoError(t, err)
+				assert.Len(t, res, 4)
+			})
 		})
 	}
 }

@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -27,6 +28,7 @@ type AuthorityClient interface {
 	AddGlobalRole(ctx context.Context, in *AddGlobalRoleRequest, opts ...grpc.CallOption) (*GenericResponse, error)
 	ListBySub(ctx context.Context, in *ListBySubRequest, opts ...grpc.CallOption) (*ListResponse, error)
 	ListByRole(ctx context.Context, in *ListByRoleRequest, opts ...grpc.CallOption) (*ListResponse, error)
+	List(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListResponse, error)
 }
 
 type authorityClient struct {
@@ -82,6 +84,15 @@ func (c *authorityClient) ListByRole(ctx context.Context, in *ListByRoleRequest,
 	return out, nil
 }
 
+func (c *authorityClient) List(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
+	err := c.cc.Invoke(ctx, "/api.Authority/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthorityServer is the server API for Authority service.
 // All implementations must embed UnimplementedAuthorityServer
 // for forward compatibility
@@ -91,6 +102,7 @@ type AuthorityServer interface {
 	AddGlobalRole(context.Context, *AddGlobalRoleRequest) (*GenericResponse, error)
 	ListBySub(context.Context, *ListBySubRequest) (*ListResponse, error)
 	ListByRole(context.Context, *ListByRoleRequest) (*ListResponse, error)
+	List(context.Context, *emptypb.Empty) (*ListResponse, error)
 	mustEmbedUnimplementedAuthorityServer()
 }
 
@@ -112,6 +124,9 @@ func (UnimplementedAuthorityServer) ListBySub(context.Context, *ListBySubRequest
 }
 func (UnimplementedAuthorityServer) ListByRole(context.Context, *ListByRoleRequest) (*ListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListByRole not implemented")
+}
+func (UnimplementedAuthorityServer) List(context.Context, *emptypb.Empty) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedAuthorityServer) mustEmbedUnimplementedAuthorityServer() {}
 
@@ -216,6 +231,24 @@ func _Authority_ListByRole_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Authority_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorityServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Authority/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorityServer).List(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Authority_ServiceDesc is the grpc.ServiceDesc for Authority service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +275,10 @@ var Authority_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListByRole",
 			Handler:    _Authority_ListByRole_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _Authority_List_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
