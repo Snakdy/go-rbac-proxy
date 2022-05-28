@@ -7,6 +7,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-redis/redis/v8"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
+	"net/url"
 	"strings"
 )
 
@@ -107,7 +108,7 @@ func (r *RedisAdapter) ListBySub(ctx context.Context, subject string) ([]*rbac.R
 
 	var items []*rbac.RoleBinding
 
-	match := fmt.Sprintf("%s-*", subject)
+	match := fmt.Sprintf("%s/*", subject)
 	log.V(2).Info("scanning for keys", "Match", match)
 	iter := r.client.Scan(ctx, 0, match, 0).Iterator()
 	for iter.Next(ctx) {
@@ -168,10 +169,10 @@ func (r *RedisAdapter) List(ctx context.Context) ([]*rbac.RoleBinding, error) {
 func parseRoleBinding(s string) *rbac.RoleBinding {
 	var verb rbac.Verb
 	// split the value
-	bits := strings.Split(s, "-")
+	bits := strings.Split(s, "/")
 	// there will always be 2 chunks, so grab them first
-	sub := bits[0]
-	resource := bits[1]
+	sub := mustDecode(bits[0])
+	resource := mustDecode(bits[1])
 	// if there's a 3rd chunk, use that as the verb
 	if len(bits) > 2 {
 		verb = rbac.Verb(rbac.Verb_value[bits[2]])
@@ -183,9 +184,21 @@ func parseRoleBinding(s string) *rbac.RoleBinding {
 	}
 }
 
-func getKey(subject, resource string, action *rbac.Verb) string {
-	if action == nil {
-		return fmt.Sprintf("%s-%s", subject, resource)
+func mustDecode(s string) string {
+	r, err := url.PathUnescape(s)
+	if err != nil {
+		return ""
 	}
-	return fmt.Sprintf("%s-%s-%s", subject, resource, action)
+	return r
+}
+
+func getKey(subject, resource string, action *rbac.Verb) string {
+	// encode so we can store
+	// values with slash
+	subject = url.PathEscape(subject)
+	resource = url.PathEscape(resource)
+	if action == nil {
+		return fmt.Sprintf("%s/%s", subject, resource)
+	}
+	return fmt.Sprintf("%s/%s/%s", subject, resource, action)
 }
