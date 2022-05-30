@@ -75,14 +75,14 @@ func main() {
 	// create and configure the server
 	gsrv := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.UnaryInterceptor(logRpc.Unary),
-		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
-		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+		grpc.ChainUnaryInterceptor(logRpc.Unary, otelgrpc.UnaryServerInterceptor()),
+		grpc.ChainStreamInterceptor(otelgrpc.StreamServerInterceptor()),
 	)
 	rbac.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp))
 
 	// configure routing
 	router := mux.NewRouter()
+	router.Use(logging.NewMiddleware(log).ServeHTTP)
 	router.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("OK"))
 	})
