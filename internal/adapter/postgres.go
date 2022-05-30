@@ -5,8 +5,12 @@ import (
 	"errors"
 	"github.com/djcass44/go-utils/orm"
 	"github.com/go-logr/logr"
+	otelgorm "github.com/kostyay/gorm-opentelemetry"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/schemas"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -31,6 +35,11 @@ func NewPostgresAdapter(ctx context.Context, dsn string) (*PostgresAdapter, erro
 	}
 	log.Info("established database connection")
 
+	log.V(1).Info("enabling plugins")
+	if err := database.Use(otelgorm.NewPlugin()); err != nil {
+		log.Error(err, "failed to enable SQL OpenTelemetry plugin")
+	}
+
 	// migrate
 	log.V(1).Info("running database migrations")
 	if err := database.AutoMigrate(&schemas.PostgresRoleBinding{}); err != nil {
@@ -45,10 +54,15 @@ func NewPostgresAdapter(ctx context.Context, dsn string) (*PostgresAdapter, erro
 }
 
 func (p *PostgresAdapter) SubjectHasGlobalRole(ctx context.Context, subject, role string) (bool, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_postgres_subjectHasGlobalRole", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("role", role),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role", role).WithName("postgres")
 	log.V(1).Info("checking if subject has global role")
 	var count int64
-	if err := p.db.Model(&schemas.PostgresRoleBinding{}).Where("subject = ? AND resource = ?", subject, role).Count(&count).Error; err != nil {
+	if err := p.db.WithContext(ctx).Model(&schemas.PostgresRoleBinding{}).Where("subject = ? AND resource = ?", subject, role).Count(&count).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.V(1).Info("matching role could not be found")
 			return false, nil
@@ -60,10 +74,16 @@ func (p *PostgresAdapter) SubjectHasGlobalRole(ctx context.Context, subject, rol
 }
 
 func (p *PostgresAdapter) SubjectCanDoAction(ctx context.Context, subject, resource string, action rbac.Verb) (bool, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_postgres_subjectCanDoAction", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("resource", resource),
+		attribute.String("action", action.String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("postgres")
 	log.V(1).Info("checking if subject has role")
 	var count int64
-	if err := p.db.Model(&schemas.PostgresRoleBinding{}).Where("subject = ? AND resource = ? AND (verb = ? OR verb = 'SUDO')", subject, resource, action.String()).Count(&count).Error; err != nil {
+	if err := p.db.WithContext(ctx).Model(&schemas.PostgresRoleBinding{}).Where("subject = ? AND resource = ? AND (verb = ? OR verb = 'SUDO')", subject, resource, action.String()).Count(&count).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.V(1).Info("matching role could not be found")
 			return false, nil
@@ -75,9 +95,15 @@ func (p *PostgresAdapter) SubjectCanDoAction(ctx context.Context, subject, resou
 }
 
 func (p *PostgresAdapter) Add(ctx context.Context, subject, resource string, action rbac.Verb) error {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_postgres_add", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("resource", resource),
+		attribute.String("action", action.String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("postgres")
 	log.V(1).Info("creating role binding")
-	if err := p.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.PostgresRoleBinding{
+	if err := p.db.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.PostgresRoleBinding{
 		Subject:  subject,
 		Resource: resource,
 		Verb:     action.String(),
@@ -89,9 +115,14 @@ func (p *PostgresAdapter) Add(ctx context.Context, subject, resource string, act
 }
 
 func (p *PostgresAdapter) AddGlobal(ctx context.Context, subject, role string) error {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_postgres_addGlobal", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("role", role),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role").WithName("postgres")
 	log.V(1).Info("creating global role binding")
-	if err := p.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.PostgresRoleBinding{
+	if err := p.db.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.PostgresRoleBinding{
 		Subject:  subject,
 		Resource: role,
 	}).Error; err != nil {
@@ -102,11 +133,15 @@ func (p *PostgresAdapter) AddGlobal(ctx context.Context, subject, role string) e
 }
 
 func (p *PostgresAdapter) ListBySub(ctx context.Context, subject string) ([]*rbac.RoleBinding, error) {
-	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject).WithName("redis")
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_postgres_listBySub", trace.WithAttributes(
+		attribute.String("subject", subject),
+	))
+	defer span.End()
+	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject).WithName("postgres")
 	log.V(1).Info("scanning for roles with subject")
 
 	var results []schemas.PostgresRoleBinding
-	if err := p.db.Where("subject = ?", subject).Find(&results).Error; err != nil {
+	if err := p.db.WithContext(ctx).Where("subject = ?", subject).Find(&results).Error; err != nil {
 		log.Error(err, "failed to find role bindings by subject")
 		return nil, err
 	}
@@ -124,11 +159,15 @@ func (p *PostgresAdapter) ListBySub(ctx context.Context, subject string) ([]*rba
 }
 
 func (p *PostgresAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.RoleBinding, error) {
-	log := logr.FromContextOrDiscard(ctx).WithValues("Role", role).WithName("redis")
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_postgres_listByRole", trace.WithAttributes(
+		attribute.String("role", role),
+	))
+	defer span.End()
+	log := logr.FromContextOrDiscard(ctx).WithValues("Role", role).WithName("postgres")
 	log.V(1).Info("scanning for roles with subject")
 
 	var results []schemas.PostgresRoleBinding
-	if err := p.db.Where("resource = ?", role).Find(&results).Error; err != nil {
+	if err := p.db.WithContext(ctx).Where("resource = ?", role).Find(&results).Error; err != nil {
 		log.Error(err, "failed to find role bindings by role")
 		return nil, err
 	}
@@ -146,11 +185,13 @@ func (p *PostgresAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.
 }
 
 func (p *PostgresAdapter) List(ctx context.Context) ([]*rbac.RoleBinding, error) {
-	log := logr.FromContextOrDiscard(ctx).WithName("redis")
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_postgres_list")
+	defer span.End()
+	log := logr.FromContextOrDiscard(ctx).WithName("postgres")
 	log.V(1).Info("scanning for roles")
 
 	var results []schemas.PostgresRoleBinding
-	if err := p.db.Find(&results).Error; err != nil {
+	if err := p.db.WithContext(ctx).Find(&results).Error; err != nil {
 		log.Error(err, "failed to find role bindings")
 		return nil, err
 	}

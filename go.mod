@@ -6,14 +6,20 @@ require (
 	github.com/alicebob/miniredis/v2 v2.21.0
 	github.com/djcass44/go-utils/logging v0.1.1
 	github.com/djcass44/go-utils/orm v0.1.1
+	github.com/djcass44/go-utils/otel v0.1.2
 	github.com/djcass44/go-utils/utilities v0.1.1
 	github.com/fergusstrange/embedded-postgres v1.15.0
 	github.com/go-logr/logr v1.2.3
+	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/kostyay/gorm-opentelemetry v1.0.1-0.20220417101731-d462e671d380
 	github.com/stretchr/testify v1.7.1
 	gitlab.com/autokubeops/serverless v0.4.2
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.32.0
+	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel/trace v1.7.0
 	go.uber.org/zap v1.21.0
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
@@ -33,6 +39,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.2.3 // indirect
+	github.com/go-redis/redis/extra/rediscmd/v8 v8.11.5 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -46,7 +53,7 @@ require (
 	github.com/jackc/pgtype v1.11.0 // indirect
 	github.com/jackc/pgx/v4 v4.16.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/levigross/grequests v0.0.0-20190908174114-253788527a1a // indirect
 	github.com/lib/pq v1.10.6 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -54,8 +61,9 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
 	gitlab.com/av1o/cap10 v0.4.0 // indirect
-	go.opentelemetry.io/otel v1.7.0 // indirect
-	go.opentelemetry.io/otel/trace v1.7.0 // indirect
+	go.opentelemetry.io/contrib v1.7.0 // indirect
+	go.opentelemetry.io/otel/exporters/jaeger v1.7.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.7.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/automaxprocs v1.5.2-0.20220426165107-d835ace014b3 // indirect
 	go.uber.org/multierr v1.8.0 // indirect

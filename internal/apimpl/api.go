@@ -7,6 +7,9 @@ import (
 	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -18,6 +21,12 @@ func NewAuthority(conf *config.Configuration, receiver adapter.Adapter) *Authori
 }
 
 func (a *Authority) Can(ctx context.Context, request *rbac.AccessRequest) (*rbac.GenericResponse, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_can", trace.WithAttributes(
+		attribute.String("subject", request.GetSubject()),
+		attribute.String("resource", request.GetResource()),
+		attribute.String("action", request.GetAction().String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.Info("checking if subject can perform action on resource")
 	// check global roles
@@ -36,6 +45,12 @@ func (a *Authority) Can(ctx context.Context, request *rbac.AccessRequest) (*rbac
 }
 
 func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (*rbac.GenericResponse, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_addRole", trace.WithAttributes(
+		attribute.String("subject", request.GetSubject()),
+		attribute.String("resource", request.GetResource()),
+		attribute.String("action", request.GetAction().String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.Info("creating role binding to role")
 	if err := a.receiver.Add(ctx, request.GetSubject(), request.GetResource(), request.GetAction()); err != nil {
@@ -48,6 +63,10 @@ func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (
 }
 
 func (a *Authority) ListBySub(ctx context.Context, request *rbac.ListBySubRequest) (*rbac.ListResponse, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_listBySub", trace.WithAttributes(
+		attribute.String("subject", request.GetSubject()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject())
 	log.Info("listing role bindings for subject")
 	items, err := a.receiver.ListBySub(ctx, request.GetSubject())
@@ -58,6 +77,10 @@ func (a *Authority) ListBySub(ctx context.Context, request *rbac.ListBySubReques
 }
 
 func (a *Authority) ListByRole(ctx context.Context, request *rbac.ListByRoleRequest) (*rbac.ListResponse, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_listByRole", trace.WithAttributes(
+		attribute.String("role", request.GetRole()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Role", request.GetRole())
 	log.Info("listing role bindings for role")
 	items, err := a.receiver.ListByRole(ctx, request.GetRole())
@@ -68,6 +91,8 @@ func (a *Authority) ListByRole(ctx context.Context, request *rbac.ListByRoleRequ
 }
 
 func (a *Authority) List(ctx context.Context, _ *emptypb.Empty) (*rbac.ListResponse, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_list")
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx)
 	log.Info("listing role bindings")
 	items, err := a.receiver.List(ctx)
@@ -78,6 +103,11 @@ func (a *Authority) List(ctx context.Context, _ *emptypb.Empty) (*rbac.ListRespo
 }
 
 func (a *Authority) AddGlobalRole(ctx context.Context, request *rbac.AddGlobalRoleRequest) (*rbac.GenericResponse, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_addGlobalRole", trace.WithAttributes(
+		attribute.String("subject", request.GetSubject()),
+		attribute.String("role", request.GetRole()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Role", request.GetRole())
 	log.Info("creating role binding to global role")
 	if err := a.receiver.AddGlobal(ctx, request.GetSubject(), request.GetRole()); err != nil {
@@ -106,6 +136,12 @@ func canPerformAction(actions []string, verb rbac.Verb) bool {
 }
 
 func (a *Authority) hasRole(ctx context.Context, request *rbac.AccessRequest) (bool, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_hasRole", trace.WithAttributes(
+		attribute.String("subject", request.GetSubject()),
+		attribute.String("resource", request.GetResource()),
+		attribute.String("action", request.GetAction().String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String(), "Global", false)
 	log.V(1).Info("checking roles")
 
@@ -118,6 +154,12 @@ func (a *Authority) hasRole(ctx context.Context, request *rbac.AccessRequest) (b
 }
 
 func (a *Authority) hasGlobalRole(ctx context.Context, request *rbac.AccessRequest) (bool, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_hasGlobalRole", trace.WithAttributes(
+		attribute.String("subject", request.GetSubject()),
+		attribute.String("resource", request.GetResource()),
+		attribute.String("action", request.GetAction().String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String(), "Global", true)
 	log.V(1).Info("checking global roles")
 	// iterate through each of the global

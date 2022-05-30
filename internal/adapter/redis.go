@@ -5,8 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-logr/logr"
+	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"net/url"
 	"strings"
 )
@@ -21,12 +25,20 @@ func NewRedisAdapter(ctx context.Context, opts *redis.UniversalOptions) *RedisAd
 	log.V(2).Info("attempting to connect to redis")
 	log.V(3).Info("using redis client configuration", "Options", opts)
 	// open connection
+	rdb := redis.NewUniversalClient(opts)
+	// add OpenTelemetry tracing
+	rdb.AddHook(redisotel.NewTracingHook())
 	return &RedisAdapter{
-		client: redis.NewUniversalClient(opts),
+		client: rdb,
 	}
 }
 
 func (r *RedisAdapter) SubjectHasGlobalRole(ctx context.Context, subject, role string) (bool, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_redis_subjectHasGlobalRole", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("role", role),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role", role).WithName("redis")
 	log.V(1).Info("checking if subject has global role")
 	key := getKey(subject, role, nil)
@@ -46,6 +58,12 @@ func (r *RedisAdapter) SubjectHasGlobalRole(ctx context.Context, subject, role s
 }
 
 func (r *RedisAdapter) SubjectCanDoAction(ctx context.Context, subject, resource string, action rbac.Verb) (bool, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_redis_subjectCanDoAction", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("resource", resource),
+		attribute.String("action", action.String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("redis")
 	log.V(1).Info("checking if subject has role")
 	key := getKey(subject, resource, &action)
@@ -77,6 +95,12 @@ func (r *RedisAdapter) SubjectCanDoAction(ctx context.Context, subject, resource
 }
 
 func (r *RedisAdapter) Add(ctx context.Context, subject, resource string, action rbac.Verb) error {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_redis_add", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("resource", resource),
+		attribute.String("action", action.String()),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Resource", resource, "Action", action.String()).WithName("redis")
 	log.V(1).Info("creating role binding")
 	key := getKey(subject, resource, &action)
@@ -90,6 +114,11 @@ func (r *RedisAdapter) Add(ctx context.Context, subject, resource string, action
 }
 
 func (r *RedisAdapter) AddGlobal(ctx context.Context, subject, role string) error {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_redis_addGlobal", trace.WithAttributes(
+		attribute.String("subject", subject),
+		attribute.String("role", role),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject, "Role", role).WithName("redis")
 	log.V(1).Info("creating global role binding")
 	key := getKey(subject, role, nil)
@@ -103,6 +132,10 @@ func (r *RedisAdapter) AddGlobal(ctx context.Context, subject, role string) erro
 }
 
 func (r *RedisAdapter) ListBySub(ctx context.Context, subject string) ([]*rbac.RoleBinding, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_redis_listBySub", trace.WithAttributes(
+		attribute.String("subject", subject),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", subject).WithName("redis")
 	log.V(1).Info("scanning for roles with subject")
 
@@ -124,6 +157,10 @@ func (r *RedisAdapter) ListBySub(ctx context.Context, subject string) ([]*rbac.R
 }
 
 func (r *RedisAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.RoleBinding, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_redis_listByRole", trace.WithAttributes(
+		attribute.String("role", role),
+	))
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Role", role).WithName("redis")
 	log.V(1).Info("scanning for bindings with role")
 
@@ -147,6 +184,8 @@ func (r *RedisAdapter) ListByRole(ctx context.Context, role string) ([]*rbac.Rol
 }
 
 func (r *RedisAdapter) List(ctx context.Context) ([]*rbac.RoleBinding, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "adapter_redis_list")
+	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithName("redis")
 	log.V(1).Info("scanning for bindings")
 
