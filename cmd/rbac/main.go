@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/djcass44/go-utils/logging"
 	"github.com/djcass44/go-utils/otel"
+	"github.com/djcass44/go-utils/otel/metrics"
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
 	"gitlab.com/autokubeops/serverless"
@@ -58,6 +59,13 @@ func main() {
 		return
 	}
 
+	prom, err := metrics.New(ctx, nil, true)
+	if err != nil {
+		log.Error(err, "failed to setup metrics exporter")
+		os.Exit(1)
+		return
+	}
+
 	c, err := config.Read(ctx, e.ConfigPath)
 	if err != nil {
 		os.Exit(1)
@@ -82,7 +90,8 @@ func main() {
 
 	// configure routing
 	router := mux.NewRouter()
-	router.Use(logging.NewMiddleware(log).ServeHTTP)
+	router.Use(logging.Middleware(log))
+	router.HandleFunc("/metrics", prom.ServeHTTP)
 	router.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("OK"))
 	})

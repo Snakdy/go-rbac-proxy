@@ -35,24 +35,29 @@ func (a *Authority) Can(ctx context.Context, request *rbac.AccessRequest) (*rbac
 		return nil, err
 	}
 	if ok {
+		metricCan.Add(ctx, 1, attribute.String(attributeSourceKey, sourceGlobal))
 		return &rbac.GenericResponse{Message: "", Ok: true}, nil
 	}
 	ok, err = a.hasRole(ctx, request)
 	if ok {
+		metricCan.Add(ctx, 1, attribute.String(attributeSourceKey, sourceRole))
 		return &rbac.GenericResponse{Message: "", Ok: true}, nil
 	}
+	metricCan.Add(ctx, 1, attribute.String(attributeSourceKey, sourceNone))
 	return &rbac.GenericResponse{Message: "", Ok: false}, nil
 }
 
 func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (*rbac.GenericResponse, error) {
-	ctx, span := otel.Tracer("").Start(ctx, "api_authority_addRole", trace.WithAttributes(
+	attributes := []attribute.KeyValue{
 		attribute.String("subject", request.GetSubject()),
 		attribute.String("resource", request.GetResource()),
 		attribute.String("action", request.GetAction().String()),
-	))
+	}
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_addRole", trace.WithAttributes(attributes...))
 	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.Info("creating role binding to role")
+	metricAdd.Add(ctx, 1, attributes...)
 	if err := a.receiver.Add(ctx, request.GetSubject(), request.GetResource(), request.GetAction()); err != nil {
 		return nil, err
 	}
@@ -103,13 +108,15 @@ func (a *Authority) List(ctx context.Context, _ *emptypb.Empty) (*rbac.ListRespo
 }
 
 func (a *Authority) AddGlobalRole(ctx context.Context, request *rbac.AddGlobalRoleRequest) (*rbac.GenericResponse, error) {
-	ctx, span := otel.Tracer("").Start(ctx, "api_authority_addGlobalRole", trace.WithAttributes(
+	attributes := []attribute.KeyValue{
 		attribute.String("subject", request.GetSubject()),
 		attribute.String("role", request.GetRole()),
-	))
+	}
+	ctx, span := otel.Tracer("").Start(ctx, "api_authority_addGlobalRole", trace.WithAttributes(attributes...))
 	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Role", request.GetRole())
 	log.Info("creating role binding to global role")
+	metricAddGlobal.Add(ctx, 1, attributes...)
 	if err := a.receiver.AddGlobal(ctx, request.GetSubject(), request.GetRole()); err != nil {
 		return nil, err
 	}
