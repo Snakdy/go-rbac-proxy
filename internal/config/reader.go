@@ -5,6 +5,7 @@ import (
 	"github.com/go-logr/logr"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"os"
 )
 
 func Read(ctx context.Context, path string) (*Configuration, error) {
@@ -23,5 +24,11 @@ func Read(ctx context.Context, path string) (*Configuration, error) {
 		return nil, err
 	}
 	log.V(1).Info("successfully unmarshalled yaml")
+	// expand environment variables in
+	// secret config items (see #1)
+	c.Adapter.Redis.Password = os.ExpandEnv(c.Adapter.Redis.Password)
+	c.Adapter.Redis.SentinelPassword = os.ExpandEnv(c.Adapter.Redis.SentinelPassword)
+	c.Adapter.Postgres.DSN = os.ExpandEnv(c.Adapter.Postgres.DSN)
+
 	return &c, nil
 }

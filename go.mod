@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/alicebob/miniredis/v2 v2.21.0
-	github.com/djcass44/go-utils/logging v0.2.0
+	github.com/djcass44/go-utils/logging v0.2.1
 	github.com/djcass44/go-utils/orm v0.1.1
 	github.com/djcass44/go-utils/otel v0.1.5
 	github.com/djcass44/go-utils/utilities v0.1.1
@@ -26,7 +26,7 @@ require (
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.3.6
-	gorm.io/gorm v1.23.5
+	gorm.io/gorm v1.23.6
 )
 
 require (
@@ -37,7 +37,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/djcass44/go-tracer v0.3.0 // indirect
-	github.com/djcass44/go-utils v0.2.1-0.20210516001550-3d288882b7f4 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.2.3 // indirect
@@ -67,7 +66,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
-	gitlab.com/av1o/cap10 v0.4.0 // indirect
+	gitlab.com/av1o/cap10 v0.4.1 // indirect
 	go.opentelemetry.io/contrib v1.7.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.7.0 // indirect
 	go.opentelemetry.io/otel/exporters/prometheus v0.30.0 // indirect
@@ -78,8 +77,8 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
-	golang.org/x/net v0.0.0-20220531201128-c960675eff93 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/net v0.0.0-20220615171555-694bf12d69de // indirect
+	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220527130721-00d5c0f3be58 // indirect
 )

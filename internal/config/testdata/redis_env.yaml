@@ -1,0 +1,9 @@
+globals:
+  SUPER:
+    - SUDO
+adapter:
+  mode: redis
+  redis:
+    password: $REDIS_PASSWORD
+    addrs:
+      - localhost:6379
