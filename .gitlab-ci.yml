@@ -1,7 +1,11 @@
-variables:
-  AUTO_CNB_RUN_IMAGE: harbor.dcas.dev/docker.io/paketobuildpacks/run:tiny-cnb
-  BUILD_KANIKO_DISABLED: "true"
-  DEPLOY_DISABLED: "true"
+stages:
+  - verify
+  - test
+  - build
 
 include:
-  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/auto/Auto-GoMod.gitlab-ci.yml'
+  - component: gitlab.dcas.dev/autodevops/components/semgrep@main
+  - component: gitlab.dcas.dev/autodevops/components/go-test@main
+  - component: gitlab.dcas.dev/autodevops/components/go-build@main
+    inputs:
+      importPath: cmd/rbac
