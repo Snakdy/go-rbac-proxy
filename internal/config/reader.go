@@ -4,14 +4,14 @@ import (
 	"context"
 	"github.com/go-logr/logr"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func Read(ctx context.Context, path string) (*Configuration, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("Path", path)
 	log.V(1).Info("reading configuration file")
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		log.Error(err, "failed to read file")
 		return nil, err
