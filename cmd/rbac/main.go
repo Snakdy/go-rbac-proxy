@@ -7,11 +7,12 @@ import (
 	"github.com/djcass44/go-utils/otel/metrics"
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gitlab.com/autokubeops/serverless"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/apimpl"
 	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	grpc_logr "gitlab.com/go-prism/go-rbac-proxy/pkg/grpc/logging"
+	grpclogr "gitlab.com/go-prism/go-rbac-proxy/pkg/grpc/logging"
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
@@ -59,12 +60,7 @@ func main() {
 		return
 	}
 
-	prom, err := metrics.New(ctx, nil, true)
-	if err != nil {
-		log.Error(err, "failed to setup metrics exporter")
-		os.Exit(1)
-		return
-	}
+	metrics.MustNewDefault(ctx)
 
 	c, err := config.Read(ctx, e.ConfigPath)
 	if err != nil {
@@ -79,7 +75,7 @@ func main() {
 	}
 
 	// configure grpc
-	logRpc := grpc_logr.NewLogrInterceptor(log)
+	logRpc := grpclogr.NewLogrInterceptor(log)
 	// create and configure the server
 	gsrv := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
@@ -91,7 +87,7 @@ func main() {
 	// configure routing
 	router := mux.NewRouter()
 	router.Use(logging.Middleware(log))
-	router.HandleFunc("/metrics", prom.ServeHTTP)
+	router.Handle("/metrics", promhttp.Handler()).Methods(http.MethodGet)
 	router.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("OK"))
 	})

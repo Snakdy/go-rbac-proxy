@@ -9,6 +9,7 @@ import (
 	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -35,15 +36,15 @@ func (a *Authority) Can(ctx context.Context, request *rbac.AccessRequest) (*rbac
 		return nil, err
 	}
 	if ok {
-		metricCan.Add(ctx, 1, attribute.String(attributeSourceKey, sourceGlobal))
+		metricCan.Add(ctx, 1, metric.WithAttributes(attribute.String(attributeSourceKey, sourceGlobal)))
 		return &rbac.GenericResponse{Message: "", Ok: true}, nil
 	}
 	ok, err = a.hasRole(ctx, request)
 	if ok {
-		metricCan.Add(ctx, 1, attribute.String(attributeSourceKey, sourceRole))
+		metricCan.Add(ctx, 1, metric.WithAttributes(attribute.String(attributeSourceKey, sourceRole)))
 		return &rbac.GenericResponse{Message: "", Ok: true}, nil
 	}
-	metricCan.Add(ctx, 1, attribute.String(attributeSourceKey, sourceNone))
+	metricCan.Add(ctx, 1, metric.WithAttributes(attribute.String(attributeSourceKey, sourceNone)))
 	return &rbac.GenericResponse{Message: "", Ok: false}, nil
 }
 
@@ -57,7 +58,7 @@ func (a *Authority) AddRole(ctx context.Context, request *rbac.AddRoleRequest) (
 	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Resource", request.GetResource(), "Action", request.GetAction().String())
 	log.Info("creating role binding to role")
-	metricAdd.Add(ctx, 1, attributes...)
+	metricAdd.Add(ctx, 1, metric.WithAttributes(attributes...))
 	if err := a.receiver.Add(ctx, request.GetSubject(), request.GetResource(), request.GetAction()); err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (a *Authority) AddGlobalRole(ctx context.Context, request *rbac.AddGlobalRo
 	defer span.End()
 	log := logr.FromContextOrDiscard(ctx).WithValues("Subject", request.GetSubject(), "Role", request.GetRole())
 	log.Info("creating role binding to global role")
-	metricAddGlobal.Add(ctx, 1, attributes...)
+	metricAddGlobal.Add(ctx, 1, metric.WithAttributes(attributes...))
 	if err := a.receiver.AddGlobal(ctx, request.GetSubject(), request.GetRole()); err != nil {
 		return nil, err
 	}

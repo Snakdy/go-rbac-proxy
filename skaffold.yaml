@@ -5,10 +5,8 @@ metadata:
 build:
   artifacts:
     - image: dev.local/go-rbac-proxy
-      buildpacks:
-        builder: harbor.dcas.dev/docker.io/paketobuildpacks/builder:tiny
-        runImage: harbor.dcas.dev/docker.io/paketobuildpacks/run:tiny-cnb
-        trustBuilder: true
+      ko:
+        main: cmd/rbac/
         dependencies:
           paths:
             - cmd/rbac/
