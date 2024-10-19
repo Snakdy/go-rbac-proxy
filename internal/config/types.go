@@ -10,7 +10,7 @@ type Configuration struct {
 }
 
 type Adapter struct {
-	Mode     string                 `yaml:"mode"`
+	Mode     Type                   `yaml:"mode"`
 	Redis    redis.UniversalOptions `yaml:"redis"`
 	Postgres PostgresAdapter        `yaml:"postgres"`
 }
@@ -18,3 +18,10 @@ type Adapter struct {
 type PostgresAdapter struct {
 	DSN string `yaml:"dsn"`
 }
+
+type Type string
+
+const (
+	TypeRedis    Type = "redis"
+	TypePostgres Type = "postgres"
+)

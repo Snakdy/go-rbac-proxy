@@ -79,8 +79,8 @@ func main() {
 	// create and configure the server
 	gsrv := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.ChainUnaryInterceptor(logRpc.Unary, otelgrpc.UnaryServerInterceptor()),
-		grpc.ChainStreamInterceptor(otelgrpc.StreamServerInterceptor()),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.UnaryInterceptor(logRpc.Unary),
 	)
 	rbac.RegisterAuthorityServer(gsrv, apimpl.NewAuthority(c, adp))
 
