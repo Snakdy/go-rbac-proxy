@@ -11,12 +11,9 @@ var _ Adapter = &PostgresAdapter{}
 
 func newPostgresAdapter(ctx context.Context, t *testing.T) *PostgresAdapter {
 	// set up the database
-	postgres := newPostgres(t)
-	t.Cleanup(func() {
-		_ = postgres.Stop()
-	})
+	dsn := newPostgres(t)
 
-	adapter, err := NewPostgresAdapter(ctx, "user=prism password=hunter2 dbname=prism host=localhost port=5432 sslmode=disable")
+	adapter, err := NewPostgresAdapter(ctx, dsn)
 	assert.NoError(t, err)
 
 	return adapter

@@ -17,14 +17,13 @@ func TestNew(t *testing.T) {
 
 	// test that postgres is configured correctly
 	t.Run("postgres", func(t *testing.T) {
-		postgres := newPostgres(t)
-		defer postgres.Stop()
+		dsn := newPostgres(t)
 
 		adp, err := New(ctx, &config.Configuration{
 			Adapter: config.Adapter{
 				Mode: "postgres",
 				Postgres: config.PostgresAdapter{
-					DSN: "user=prism password=hunter2 dbname=prism host=localhost port=5432 sslmode=disable",
+					DSN: dsn,
 				},
 			},
 		})
