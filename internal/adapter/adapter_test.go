@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"github.com/alicebob/miniredis/v2"
+	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/go-redis/redis/v8"
@@ -17,7 +18,7 @@ func TestNew(t *testing.T) {
 
 	// test that postgres is configured correctly
 	t.Run("postgres", func(t *testing.T) {
-		dsn := newPostgres(t)
+		dsn := newPostgres(t, embeddedpostgres.V16)
 
 		adp, err := New(ctx, &config.Configuration{
 			Adapter: config.Adapter{
@@ -67,8 +68,16 @@ func TestAdapter_Add(t *testing.T) {
 		adapter Adapter
 	}{
 		{
-			"postgresql",
-			newPostgresAdapter(ctx, t),
+			"postgresql16",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V16),
+		},
+		{
+			"postgresql15",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V15),
+		},
+		{
+			"postgresql14",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V14),
 		},
 		{
 			"redis",
@@ -94,8 +103,16 @@ func TestNewAdapter(t *testing.T) {
 		adapter Adapter
 	}{
 		{
-			"postgresql",
-			newPostgresAdapter(ctx, t),
+			"postgresql16",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V16),
+		},
+		{
+			"postgresql15",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V15),
+		},
+		{
+			"postgresql14",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V14),
 		},
 		{
 			"redis",
@@ -158,8 +175,16 @@ func TestAdapter_List(t *testing.T) {
 		adapter Adapter
 	}{
 		{
-			"postgresql",
-			newPostgresAdapter(ctx, t),
+			"postgresql16",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V16),
+		},
+		{
+			"postgresql15",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V15),
+		},
+		{
+			"postgresql14",
+			newPostgresAdapter(ctx, t, embeddedpostgres.V14),
 		},
 		{
 			"redis",

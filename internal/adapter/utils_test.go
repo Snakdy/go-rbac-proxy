@@ -7,14 +7,14 @@ import (
 	"testing"
 )
 
-func newPostgres(t *testing.T) string {
+func newPostgres(t *testing.T, version embeddedpostgres.PostgresVersion) string {
 	port := uint32(30000 + rand.IntN(2000))
 
 	cfg := embeddedpostgres.DefaultConfig().
 		Username("postgres").
 		Password("hunter2").
 		Database("something").
-		Version(embeddedpostgres.V16).
+		Version(version).
 		Port(port).
 		BinariesPath(t.TempDir()).
 		DataPath(t.TempDir()).
