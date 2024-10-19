@@ -2,10 +2,10 @@ package adapter
 
 import (
 	"context"
+	"github.com/Snakdy/go-rbac-proxy/pkg/rbac"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"testing"
 )
 

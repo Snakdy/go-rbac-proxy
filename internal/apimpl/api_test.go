@@ -2,12 +2,12 @@ package apimpl
 
 import (
 	"context"
+	"github.com/Snakdy/go-rbac-proxy/internal/adapter"
+	"github.com/Snakdy/go-rbac-proxy/internal/config"
+	"github.com/Snakdy/go-rbac-proxy/pkg/rbac"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"testing"
 )
 

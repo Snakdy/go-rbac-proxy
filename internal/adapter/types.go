@@ -2,7 +2,7 @@ package adapter
 
 import (
 	"context"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
+	"github.com/Snakdy/go-rbac-proxy/pkg/rbac"
 )
 
 type Adapter interface {

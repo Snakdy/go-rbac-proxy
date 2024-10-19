@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/Snakdy/go-rbac-proxy/internal/adapter"
+	"github.com/Snakdy/go-rbac-proxy/internal/apimpl"
+	"github.com/Snakdy/go-rbac-proxy/internal/config"
+	grpclogr "github.com/Snakdy/go-rbac-proxy/pkg/grpc/logging"
+	"github.com/Snakdy/go-rbac-proxy/pkg/rbac"
 	"github.com/djcass44/go-utils/logging"
 	"github.com/djcass44/go-utils/otel"
 	"github.com/djcass44/go-utils/otel/metrics"
@@ -9,11 +14,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gitlab.com/autokubeops/serverless"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/apimpl"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	grpclogr "gitlab.com/go-prism/go-rbac-proxy/pkg/grpc/logging"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

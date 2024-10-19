@@ -3,8 +3,8 @@ package adapter
 import (
 	"context"
 	"fmt"
+	"github.com/Snakdy/go-rbac-proxy/internal/config"
 	"github.com/go-logr/logr"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"

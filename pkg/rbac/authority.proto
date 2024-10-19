@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api;
 
-option go_package = "gitlab.com/go-prism/go-rbac-proxy/pkg/rbac";
+option go_package = "github.com/Snakdy/go-rbac-proxy/pkg/rbac";
 
 import "google/protobuf/empty.proto";
 

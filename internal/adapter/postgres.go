@@ -3,11 +3,11 @@ package adapter
 import (
 	"context"
 	"errors"
+	"github.com/Snakdy/go-rbac-proxy/pkg/rbac"
+	"github.com/Snakdy/go-rbac-proxy/pkg/schemas"
 	"github.com/djcass44/go-utils/orm"
 	"github.com/go-logr/logr"
 	otelgorm "github.com/kostyay/gorm-opentelemetry"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/schemas"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"

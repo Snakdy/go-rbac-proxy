@@ -2,11 +2,11 @@ package apimpl
 
 import (
 	"context"
+	"github.com/Snakdy/go-rbac-proxy/internal/adapter"
+	"github.com/Snakdy/go-rbac-proxy/internal/config"
+	"github.com/Snakdy/go-rbac-proxy/pkg/rbac"
 	"github.com/djcass44/go-utils/utilities/sliceutils"
 	"github.com/go-logr/logr"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/adapter"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"

@@ -2,11 +2,11 @@ package config_test
 
 import (
 	"context"
+	"github.com/Snakdy/go-rbac-proxy/internal/config"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
 	"os"
 	"testing"
 )

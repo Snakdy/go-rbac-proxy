@@ -1,4 +1,4 @@
-module gitlab.com/go-prism/go-rbac-proxy
+module github.com/Snakdy/go-rbac-proxy
 
 go 1.22.0
 

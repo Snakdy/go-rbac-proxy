@@ -2,14 +2,14 @@ package adapter
 
 import (
 	"context"
+	"github.com/Snakdy/go-rbac-proxy/internal/config"
+	"github.com/Snakdy/go-rbac-proxy/pkg/rbac"
 	"github.com/alicebob/miniredis/v2"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/go-prism/go-rbac-proxy/internal/config"
-	"gitlab.com/go-prism/go-rbac-proxy/pkg/rbac"
 	"testing"
 )
 
